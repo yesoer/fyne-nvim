@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"image/color"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/widget"
@@ -13,8 +14,11 @@ var _ fyne.Widget = (*NeoVim)(nil)
 
 // Other interfaces we might want to implement :
 // - shortcutable
-// - focusable
 // - validatable
+
+// Declare conformity with the focusable interface
+// So that we can receive and handle text input events
+var _ fyne.Focusable = (*NeoVim)(nil)
 
 type NeoVim struct {
 	// Widget requirements
@@ -78,6 +82,40 @@ func (n *NeoVim) Resize(s fyne.Size) {
 // CreateRenderer implements fyne.Widget
 func (n *NeoVim) CreateRenderer() fyne.WidgetRenderer {
 	return &render{n}
+}
+
+// FocusGained implements fyne.Focusable
+// FocusGained is a hook called by the focus handling logic after this object gained the focus.
+func (n *NeoVim) FocusGained() {
+	fmt.Println("Focus gained")
+	n.Refresh()
+}
+
+// FocusGained implements fyne.Focusable
+// FocusLost is a hook called by the focus handling logic after this object lost the focus.
+func (n *NeoVim) FocusLost() {
+	fmt.Println("Focus lost")
+	n.Refresh()
+}
+
+// FocusGained implements fyne.Focusable
+// TypedRune is a hook called by the input handling logic on text input events if this object is focused.
+func (n *NeoVim) TypedRune(r rune) {
+	fmt.Println("Typed rune: ", r)
+	// TODO : possibly should send this to neovim, let it handle it and
+	// execute this code in the redraw handler
+	// TODO : dynamic (cursor) position and color state in the widget
+	row, col := 0, 0
+	fg, bg := color.White, color.Black
+	cellStyle := &widget.CustomTextGridStyle{FGColor: fg, BGColor: bg}
+	n.content.SetCell(row, col, widget.TextGridCell{Rune: r, Style: cellStyle})
+}
+
+// FocusGained implements fyne.Focusable
+// TypedKey is a hook called by the input handling logic on key events if this object is focused.
+func (n *NeoVim) TypedKey(e *fyne.KeyEvent) {
+	fmt.Println("Typed key: ", e)
+	// TODO : handle
 }
 
 // Declare conformity with the widget renderer interface
