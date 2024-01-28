@@ -27,7 +27,8 @@ type NeoVim struct {
 	// Additional fields
 	// It is standard in a Fyne widget to export the fields which define
 	// behaviour (just like the primitives defined in the canvas package).
-	content *widget.TextGrid
+	content              *widget.TextGrid
+	cursorRow, cursorCol int
 }
 
 // Create a new NeoVim widget
@@ -69,10 +70,6 @@ func startNeovim() error {
 	return nil
 }
 
-func (n *NeoVim) SetText(text string) {
-	n.content.SetText(text)
-}
-
 // Override resize to adjust the textgrid
 func (n *NeoVim) Resize(s fyne.Size) {
 	n.BaseWidget.Resize(s) // must be included
@@ -87,35 +84,55 @@ func (n *NeoVim) CreateRenderer() fyne.WidgetRenderer {
 // FocusGained implements fyne.Focusable
 // FocusGained is a hook called by the focus handling logic after this object gained the focus.
 func (n *NeoVim) FocusGained() {
-	fmt.Println("Focus gained")
 	n.Refresh()
 }
 
 // FocusGained implements fyne.Focusable
 // FocusLost is a hook called by the focus handling logic after this object lost the focus.
 func (n *NeoVim) FocusLost() {
-	fmt.Println("Focus lost")
 	n.Refresh()
 }
 
 // FocusGained implements fyne.Focusable
 // TypedRune is a hook called by the input handling logic on text input events if this object is focused.
 func (n *NeoVim) TypedRune(r rune) {
-	fmt.Println("Typed rune: ", r)
-	// TODO : possibly should send this to neovim, let it handle it and
-	// execute this code in the redraw handler
-	// TODO : dynamic (cursor) position and color state in the widget
-	row, col := 0, 0
+	// TODO : buffer the runes and send them to neovim, then on redraw use writeRune
+	// to update the textgrid
+	n.writeRune(r)
+}
+
+// Writes a rune to the textgrid
+func (n *NeoVim) writeRune(r rune) {
+	currRow, currCol := n.cursorRow, n.cursorCol
+
+	// make sure the and columns exist
+	for len(n.content.Rows)-1 < currRow {
+		n.content.Rows = append(n.content.Rows, widget.TextGridRow{})
+	}
+
 	fg, bg := color.White, color.Black
 	cellStyle := &widget.CustomTextGridStyle{FGColor: fg, BGColor: bg}
-	n.content.SetCell(row, col, widget.TextGridCell{Rune: r, Style: cellStyle})
+
+	for len(n.content.Rows[currRow].Cells)-1 < currCol {
+		newCell := widget.TextGridCell{
+			Rune:  ' ',
+			Style: cellStyle,
+		}
+		n.content.Rows[currRow].Cells = append(n.content.Rows[currRow].Cells, newCell)
+	}
+
+	n.content.SetCell(currRow, currCol, widget.TextGridCell{Rune: r, Style: cellStyle})
+
+	n.cursorCol++
 }
 
 // FocusGained implements fyne.Focusable
 // TypedKey is a hook called by the input handling logic on key events if this object is focused.
 func (n *NeoVim) TypedKey(e *fyne.KeyEvent) {
-	fmt.Println("Typed key: ", e)
-	// TODO : handle
+	if e.Name == fyne.KeyReturn {
+		n.cursorRow++
+		n.cursorCol = 0
+	}
 }
 
 // Declare conformity with the widget renderer interface
@@ -126,8 +143,8 @@ type render struct {
 }
 
 // Layout implements fyne.WidgetRenderer
-func (r *render) Layout(fyne.Size) {
-	r.content.Resize(r.MinSize())
+func (r *render) Layout(s fyne.Size) {
+	r.content.Resize(s)
 }
 
 // MinSize implements fyne.WidgetRenderer

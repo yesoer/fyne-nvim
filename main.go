@@ -14,7 +14,6 @@ func main() {
 
 	nvim := New()
 	nvim.Resize(fyne.NewSize(800, 600))
-	nvim.SetText("Hello, World!")
 	w.SetContent(nvim)
 	w.Canvas().Focus(nvim)
 
