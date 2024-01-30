@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"image/color"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/widget"
@@ -12,7 +11,7 @@ import (
 // Declare conformity with the widget interface
 var _ fyne.Widget = (*NeoVim)(nil)
 
-// Other interfaces we might want to implement :
+// TODO : Other interfaces we might want to implement :
 // - shortcutable
 // - validatable
 
@@ -29,6 +28,7 @@ type NeoVim struct {
 	// behaviour (just like the primitives defined in the canvas package).
 	content              *widget.TextGrid
 	cursorRow, cursorCol int
+	engine               *nvim.Nvim
 }
 
 // Create a new NeoVim widget
@@ -39,7 +39,7 @@ func New() *NeoVim {
 	neovim.content = tgrid
 
 	neovim.ExtendBaseWidget(neovim)
-	err := startNeovim()
+	err := neovim.startNeovim()
 	if err != nil {
 		fmt.Println("Error starting neovim: ", err)
 	}
@@ -48,13 +48,16 @@ func New() *NeoVim {
 }
 
 // Helper to start neovim
-func startNeovim() error {
+func (n *NeoVim) startNeovim() error {
+	// start neovim
+	// --embed to use stdin/stdout as a msgpack-RPC channel
 	opt := nvim.ChildProcessArgs("--embed")
 	nvimInstance, err := nvim.NewChildProcess(opt)
 	if err != nil {
 		return err
 	}
 
+	// tell nvim we want to draw the screen
 	uiOpt := make(map[string]any)
 	err = nvimInstance.AttachUI(100, 100, uiOpt)
 	if err != nil {
@@ -64,8 +67,11 @@ func startNeovim() error {
 	nvimInstance.RegisterHandler("redraw", func(events ...[]interface{}) {
 		for _, event := range events {
 			fmt.Println("Event ", event)
+			n.HandleNvimEvent(event)
 		}
 	})
+
+	n.engine = nvimInstance
 
 	return nil
 }
@@ -96,34 +102,7 @@ func (n *NeoVim) FocusLost() {
 // FocusGained implements fyne.Focusable
 // TypedRune is a hook called by the input handling logic on text input events if this object is focused.
 func (n *NeoVim) TypedRune(r rune) {
-	// TODO : buffer the runes and send them to neovim, then on redraw use writeRune
-	// to update the textgrid
-	n.writeRune(r)
-}
-
-// Writes a rune to the textgrid
-func (n *NeoVim) writeRune(r rune) {
-	currRow, currCol := n.cursorRow, n.cursorCol
-
-	// make sure the and columns exist
-	for len(n.content.Rows)-1 < currRow {
-		n.content.Rows = append(n.content.Rows, widget.TextGridRow{})
-	}
-
-	fg, bg := color.White, color.Black
-	cellStyle := &widget.CustomTextGridStyle{FGColor: fg, BGColor: bg}
-
-	for len(n.content.Rows[currRow].Cells)-1 < currCol {
-		newCell := widget.TextGridCell{
-			Rune:  ' ',
-			Style: cellStyle,
-		}
-		n.content.Rows[currRow].Cells = append(n.content.Rows[currRow].Cells, newCell)
-	}
-
-	n.content.SetCell(currRow, currCol, widget.TextGridCell{Rune: r, Style: cellStyle})
-
-	n.cursorCol++
+	n.engine.Input(string(r))
 }
 
 // FocusGained implements fyne.Focusable
