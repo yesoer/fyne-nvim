@@ -5,6 +5,7 @@ import (
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
+	nvim "github.com/yesoer/fyne-nvim"
 )
 
 func main() {
@@ -12,7 +13,7 @@ func main() {
 	w := a.NewWindow("Fyne NeoVim Example")
 	w.Resize(fyne.NewSize(800, 600))
 
-	nvim := New()
+	nvim := nvim.New()
 	nvim.Resize(fyne.NewSize(800, 600))
 	w.SetContent(nvim)
 	w.Canvas().Focus(nvim)

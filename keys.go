@@ -1,4 +1,4 @@
-package main
+package nvim
 
 import "fyne.io/fyne/v2"
 

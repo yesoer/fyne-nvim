@@ -1,4 +1,4 @@
-module fyne-nvim
+module github.com/yesoer/fyne-nvim
 
 go 1.20
 
