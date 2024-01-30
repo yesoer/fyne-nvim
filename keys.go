@@ -32,3 +32,24 @@ var neovimKeyMap = map[fyne.KeyName]string{
 	fyne.KeyF12:       "<F12>",
 	fyne.KeyEnter:     "<CR>",
 }
+
+// These are the modifier keys fyne supports, which are also sent to TypedKey
+var neovimModifierMap = map[fyne.KeyModifier]string{
+	// base modifiers
+	fyne.KeyModifierShift:   "S-",
+	fyne.KeyModifierAlt:     "A-",
+	fyne.KeyModifierControl: "C-",
+	fyne.KeyModifierSuper:   "M-",
+	// all possible combinations of the above
+	fyne.KeyModifierShift | fyne.KeyModifierAlt:                                                   "S-A-",
+	fyne.KeyModifierShift | fyne.KeyModifierControl:                                               "S-C-",
+	fyne.KeyModifierShift | fyne.KeyModifierSuper:                                                 "S-M-",
+	fyne.KeyModifierAlt | fyne.KeyModifierControl:                                                 "A-C-",
+	fyne.KeyModifierAlt | fyne.KeyModifierSuper:                                                   "A-M-",
+	fyne.KeyModifierControl | fyne.KeyModifierSuper:                                               "C-M-",
+	fyne.KeyModifierShift | fyne.KeyModifierAlt | fyne.KeyModifierControl:                         "S-A-C-",
+	fyne.KeyModifierShift | fyne.KeyModifierAlt | fyne.KeyModifierSuper:                           "S-A-M-",
+	fyne.KeyModifierShift | fyne.KeyModifierControl | fyne.KeyModifierSuper:                       "S-C-M-",
+	fyne.KeyModifierAlt | fyne.KeyModifierControl | fyne.KeyModifierSuper:                         "A-C-M-",
+	fyne.KeyModifierShift | fyne.KeyModifierAlt | fyne.KeyModifierControl | fyne.KeyModifierSuper: "S-A-C-M-",
+}

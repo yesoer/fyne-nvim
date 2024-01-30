@@ -5,6 +5,7 @@ import (
 	"image/color"
 
 	"fyne.io/fyne/v2"
+	"fyne.io/fyne/v2/driver/desktop"
 	"fyne.io/fyne/v2/widget"
 	"github.com/neovim/go-client/nvim"
 )
@@ -13,8 +14,12 @@ import (
 var _ fyne.Widget = (*NeoVim)(nil)
 
 // TODO : Other interfaces we might want to implement :
-// - shortcutable
 // - validatable
+
+// Declare conformity with the shortcut interface
+// So that we can receive and handle shortcut events, which includes modifiers
+// For support of other shortcuts add fyne.ShortCutHandler
+var _ fyne.Shortcutable = (*NeoVim)(nil)
 
 // Declare conformity with the focusable interface
 // So that we can receive and handle text input events
@@ -109,8 +114,25 @@ func (n *NeoVim) TypedRune(r rune) {
 // FocusGained implements fyne.Focusable
 // TypedKey is a hook called by the input handling logic on key events if this object is focused.
 func (n *NeoVim) TypedKey(e *fyne.KeyEvent) {
-	fmt.Println("typedkey ", e.Name)
 	n.engine.Input(neovimKeyMap[e.Name])
+}
+
+// TypedShortcut implements fyne.Shortcutable
+// TypedShortcut handle the registered shortcut
+// TODO : There are other shortcuts e.g. SelectAll (Cmd+A)
+func (n *NeoVim) TypedShortcut(s fyne.Shortcut) {
+	if ds, ok := s.(*desktop.CustomShortcut); ok {
+
+		char := ds.KeyName[0]
+		if ds.Key() == fyne.KeySpace {
+			char = ' '
+		} else if ds.Key() == "@" {
+			char = '@'
+		}
+
+		modifiers := neovimModifierMap[ds.Modifier]
+		n.engine.Input("<" + modifiers + string(char) + ">")
+	}
 }
 
 // Declare conformity with the widget renderer interface
