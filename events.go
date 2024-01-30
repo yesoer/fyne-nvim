@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"image/color"
 
 	"fyne.io/fyne/v2/widget"
@@ -90,6 +91,11 @@ func (n *NeoVim) HandleNvimEvent(event []interface{}) {
 		// No additional entries
 
 	case "cursor_goto":
+		// Move the cursor to position (row, col). Currently, the same cursor is
+		// used to define the position for text insertion and the visible
+		// cursor. However, only the last cursor position, after processing the
+		// entire array in the "redraw" event, is intended to be a visible cursor
+		// position.
 		// Additional entries: row, col
 		pos := event[1].([]interface{})
 		row, _ := pos[0].(int64)
@@ -110,6 +116,9 @@ func (n *NeoVim) HandleNvimEvent(event []interface{}) {
 		// Additional entries: attrs
 
 	case "put":
+		// The (utf-8 encoded) string text is put at the cursor position (and
+		// the cursor is advanced), with the highlights as set by the last
+		// highlight_set update.
 		// Additional entries: text
 		for _, s := range event[1:] {
 			r := s.([]interface{})[0].(string)
