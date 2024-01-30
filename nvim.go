@@ -109,9 +109,8 @@ func (n *NeoVim) TypedRune(r rune) {
 // FocusGained implements fyne.Focusable
 // TypedKey is a hook called by the input handling logic on key events if this object is focused.
 func (n *NeoVim) TypedKey(e *fyne.KeyEvent) {
-	if e.Name == fyne.KeyReturn {
-		n.engine.Input("<CR>")
-	}
+	fmt.Println("typedkey ", e.Name)
+	n.engine.Input(neovimKeyMap[e.Name])
 }
 
 // Declare conformity with the widget renderer interface
