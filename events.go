@@ -52,7 +52,11 @@ func (n *NeoVim) HandleNvimEvent(event []interface{}) {
 		// No additional entries
 
 	case "flush":
+		// Nvim is done redrawing the screen. For an implementation that renders
+		// to an internal buffer, this is the time to display the redrawn parts
+		// to the user.
 		// No additional entries
+		n.Refresh()
 
 	case "grid_resize":
 		// Additional entries: grid, width, height
@@ -212,6 +216,7 @@ func (n *NeoVim) HandleNvimEvent(event []interface{}) {
 
 	default:
 		// Handle unknown entry type
+		fmt.Println("Unknown event type: ", event[0])
 	}
 }
 
