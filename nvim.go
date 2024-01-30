@@ -110,8 +110,7 @@ func (n *NeoVim) TypedRune(r rune) {
 // TypedKey is a hook called by the input handling logic on key events if this object is focused.
 func (n *NeoVim) TypedKey(e *fyne.KeyEvent) {
 	if e.Name == fyne.KeyReturn {
-		n.cursorRow++
-		n.cursorCol = 0
+		n.engine.Input("<CR>")
 	}
 }
 
