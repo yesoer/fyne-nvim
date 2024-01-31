@@ -3,6 +3,7 @@ package nvim
 import (
 	"fmt"
 	"image/color"
+	"reflect"
 
 	"fyne.io/fyne/v2/widget"
 )
@@ -62,7 +63,21 @@ func (n *NeoVim) HandleNvimEvent(event []interface{}) {
 		// Additional entries: grid, width, height
 
 	case "default_colors_set":
+		// The RGB values will always be valid colors, by default. If no colors
+		// have been set, they will default to black and white, depending on
+		// 'background'. By setting the ext_termcolors option, instead -1 will
+		// be used for unset colors. This is mostly useful for a TUI
+		// implementation, where using the terminal builtin ("ANSI") defaults
+		// are expected.
+		// Note: Unlike the corresponding ui-grid-old events, the screen is not
+		// always cleared after sending this event. The UI must repaint the
+		// screen with changed background color itself.
 		// Additional entries: rgb_fg, rgb_bg, rgb_sp, cterm_fg, cterm_bg
+		defaultHL.Fg = extractRGBAFromEvent(event, 0)
+		defaultHL.Bg = extractRGBAFromEvent(event, 1)
+		defaultHL.Special = extractRGBAFromEvent(event, 2)
+		// cterm_fg, cterm_bg are ignored
+		n.Refresh()
 
 	case "hl_attr_define":
 		// Additional entries: id, rgb_attr, cterm_attr, info
@@ -107,17 +122,25 @@ func (n *NeoVim) HandleNvimEvent(event []interface{}) {
 		n.cursorRow = int(row)
 		n.cursorCol = int(col)
 
+	// Events to set the default colors
+	// Additional entries: color
 	case "update_fg":
-		// Additional entries: color
-
+		defaultHL.Fg = extractRGBAFromEvent(event, 0)
 	case "update_bg":
-		// Additional entries: color
-
+		defaultHL.Bg = extractRGBAFromEvent(event, 0)
 	case "update_sp":
-		// Additional entries: color
-
+		defaultHL.Special = extractRGBAFromEvent(event, 0)
 	case "highlight_set":
-		// Additional entries: attrs
+		// Set the attributes that the next text put on the grid will have.
+		// Additional entries: attrs which is a dictionary
+		m := event[1].([]interface{})[0].(map[string]interface{})
+		newHL := highlight{
+			Fg:      defaultHL.Fg,
+			Bg:      defaultHL.Bg,
+			Special: defaultHL.Special,
+		}
+		setHLFromMap(m, &defaultHL)
+		n.hl = newHL
 
 	case "put":
 		// The (utf-8 encoded) string text is put at the cursor position (and
@@ -220,6 +243,59 @@ func (n *NeoVim) HandleNvimEvent(event []interface{}) {
 	}
 }
 
+// Expects a map which defines the attributes for highlighting etc. and a target
+// to write them to.
+func setHLFromMap(personMap map[string]interface{}, target *highlight) {
+	targetValue := reflect.ValueOf(target).Elem()
+
+	for i := 0; i < targetValue.NumField(); i++ {
+		field := targetValue.Type().Field(i)
+		tag := field.Tag.Get("map")
+		if value, ok := personMap[tag]; ok {
+			if field.Type == reflect.TypeOf(color.RGBA{}) {
+				value, ok = extractRGBA[uint64](value)
+				if !ok {
+					value, _ = extractRGBA[int64](value)
+				}
+			}
+			targetValue.Field(i).Set(reflect.ValueOf(value))
+		}
+	}
+
+	if target.Reverse {
+		target.Fg, target.Bg = target.Bg, target.Fg
+	}
+}
+
+// A helper to wrap the extraction of RGBA colors from nvim events
+func extractRGBAFromEvent(event []interface{}, pos int) color.RGBA {
+	entry := event[1].([]interface{})[pos]
+	c, ok := extractRGBA[uint64](entry)
+	if !ok {
+		c, _ = extractRGBA[int64](entry)
+	}
+	return c
+}
+
+// Constraint for the color in nvim events
+type NvimColor interface {
+	uint64 | int64
+}
+
+// Expects a uint64 or int64 and returns its corresponding color.RGBA
+func extractRGBA[T NvimColor](i interface{}) (color.RGBA, bool) {
+	n, ok := i.(T)
+	if !ok {
+		return color.RGBA{}, false
+	}
+
+	r := (n >> 16) & 0xFF
+	g := (n >> 8) & 0xFF
+	b := n & 0xFF
+	a := 255
+	return color.RGBA{uint8(r), uint8(g), uint8(b), uint8(a)}, true
+}
+
 // Writes a rune to the textgrid
 func (n *NeoVim) writeRune(r rune) {
 	currRow, currCol := n.cursorRow, n.cursorCol
@@ -229,7 +305,7 @@ func (n *NeoVim) writeRune(r rune) {
 		n.content.Rows = append(n.content.Rows, widget.TextGridRow{})
 	}
 
-	fg, bg := color.White, color.Black
+	fg, bg := n.hl.Fg, n.hl.Bg
 	cellStyle := &widget.CustomTextGridStyle{FGColor: fg, BGColor: bg}
 
 	for len(n.content.Rows[currRow].Cells)-1 < currCol {

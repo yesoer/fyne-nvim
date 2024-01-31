@@ -25,6 +25,32 @@ var _ fyne.Shortcutable = (*NeoVim)(nil)
 // So that we can receive and handle text input events
 var _ fyne.Focusable = (*NeoVim)(nil)
 
+// Colorscheme
+type highlight struct {
+	Fg      color.RGBA `map:"foreground"`
+	Bg      color.RGBA `map:"background"`
+	Special color.RGBA `map:"special"` // color to use for underlines
+	Reverse bool       `map:"reverse"` // trigger switch of fg and bg
+
+	// text styles
+	Italic        bool `map:"italic"`
+	Bold          bool `map:"bold"`
+	Strikethrough bool `map:"strikethrough"`
+
+	// underline styles which all use the special color
+	Underline   bool `map:"underline"`
+	Undercurl   bool `map:"undercurl"`
+	Underdouble bool `map:"underdouble"`
+	Underdotted bool `map:"underdotted"`
+	Underdashed bool `map:"underdashed"`
+}
+
+var defaultHL = highlight{
+	Fg:      color.RGBA{0, 0, 0, 0},
+	Bg:      color.RGBA{255, 255, 255, 255},
+	Special: color.RGBA{0, 0, 0, 255},
+}
+
 type NeoVim struct {
 	// Widget requirements
 	widget.BaseWidget
@@ -35,6 +61,7 @@ type NeoVim struct {
 	content              *widget.TextGrid
 	cursorRow, cursorCol int
 	engine               *nvim.Nvim
+	hl                   highlight // the color scheme for the next "put" event
 }
 
 // Create a new NeoVim widget
