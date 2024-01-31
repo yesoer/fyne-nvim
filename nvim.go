@@ -43,11 +43,14 @@ type highlight struct {
 	Underdouble bool `map:"underdouble"`
 	Underdotted bool `map:"underdotted"`
 	Underdashed bool `map:"underdashed"`
+
+	Altfont interface{} `map:"altfont"` // TODO : implement
+	Blend   interface{} `map:"blend"`   // TODO : implement
 }
 
 var defaultHL = highlight{
-	Fg:      color.RGBA{0, 0, 0, 0},
-	Bg:      color.RGBA{255, 255, 255, 255},
+	Fg:      color.RGBA{255, 255, 255, 0},
+	Bg:      color.RGBA{0, 0, 0, 255},
 	Special: color.RGBA{0, 0, 0, 255},
 }
 
@@ -61,12 +64,13 @@ type NeoVim struct {
 	content              *widget.TextGrid
 	cursorRow, cursorCol int
 	engine               *nvim.Nvim
-	hl                   highlight // the color scheme for the next "put" event
+	hl                   map[int]highlight // the color scheme table
 }
 
 // Create a new NeoVim widget
 func New() *NeoVim {
 	neovim := &NeoVim{}
+	neovim.hl = make(map[int]highlight)
 
 	tgrid := widget.NewTextGrid()
 	neovim.content = tgrid
@@ -90,8 +94,11 @@ func (n *NeoVim) startNeovim() error {
 		return err
 	}
 
-	// tell nvim we want to draw the screen
+	// tell nvim we want to draw the screen (using the new line based API)
 	uiOpt := make(map[string]any)
+	uiOpt["ext_hlstate"] = true  // detailed highlight state
+	uiOpt["ext_linegrid"] = true // new line based grid events
+	// TODO : calculate the number of rows and columns
 	err = nvimInstance.AttachUI(100, 100, uiOpt)
 	if err != nil {
 		return err
@@ -99,7 +106,6 @@ func (n *NeoVim) startNeovim() error {
 
 	nvimInstance.RegisterHandler("redraw", func(events ...[]interface{}) {
 		for _, event := range events {
-			fmt.Println("Event ", event)
 			n.HandleNvimEvent(event)
 		}
 	})
@@ -190,7 +196,7 @@ func (r *render) Refresh() {
 // refreshCursor draws the cursor
 func (r *render) refreshCursor() {
 	cellStyle := &widget.CustomTextGridStyle{
-		FGColor: r.NeoVim.hl.Bg,
+		FGColor: color.RGBA{200, 200, 200, 180},
 		BGColor: color.RGBA{255, 255, 255, 180},
 	}
 

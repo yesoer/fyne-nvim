@@ -9,237 +9,209 @@ import (
 )
 
 func (n *NeoVim) HandleNvimEvent(event []interface{}) {
-	switch event[0] {
-	case "set_title":
-		// Additional entries: title
+	// fmt.Println("Handling event: ", event)
+	// fmt.Println("Handling event: ", event[0])
 
-	case "set_icon":
-		// Additional entries: icon
-
-	case "mode_info_set":
-		// Additional entries: cursor_style_enabled, mode_info
-
-	case "option_set":
-		// Additional entries: name, value
-
-	case "chdir":
-		// Additional entries: path
-
-	case "mode_change":
-		// Additional entries: mode, mode_idx
-
-	case "mouse_on":
-		// No additional entries
-
-	case "mouse_off":
-		// No additional entries
-
-	case "busy_start":
-		// No additional entries
-
-	case "busy_stop":
-		// No additional entries
-
-	case "suspend":
-		// No additional entries
-
-	case "update_menu":
-		// No additional entries
-
-	case "bell":
-		// No additional entries
-
-	case "visual_bell":
-		// No additional entries
-
-	case "flush":
-		// Nvim is done redrawing the screen. For an implementation that renders
-		// to an internal buffer, this is the time to display the redrawn parts
-		// to the user.
-		// No additional entries
-		n.Refresh()
-
-	case "grid_resize":
-		// Additional entries: grid, width, height
-
-	case "default_colors_set":
-		// The RGB values will always be valid colors, by default. If no colors
-		// have been set, they will default to black and white, depending on
-		// 'background'. By setting the ext_termcolors option, instead -1 will
-		// be used for unset colors. This is mostly useful for a TUI
-		// implementation, where using the terminal builtin ("ANSI") defaults
-		// are expected.
-		// Note: Unlike the corresponding ui-grid-old events, the screen is not
-		// always cleared after sending this event. The UI must repaint the
-		// screen with changed background color itself.
-		// Additional entries: rgb_fg, rgb_bg, rgb_sp, cterm_fg, cterm_bg
-		defaultHL.Fg = extractRGBAFromEvent(event, 0)
-		defaultHL.Bg = extractRGBAFromEvent(event, 1)
-		defaultHL.Special = extractRGBAFromEvent(event, 2)
-		// cterm_fg, cterm_bg are ignored
-		n.Refresh()
-
-	case "hl_attr_define":
-		// Additional entries: id, rgb_attr, cterm_attr, info
-
-	case "hl_group_set":
-		// Additional entries: name, hl_id
-
-	case "grid_line":
-		// Additional entries: grid, row, col_start, cells, wrap
-
-	case "grid_clear":
-		// Additional entries: grid
-
-	case "grid_destroy":
-		// Additional entries: grid
-
-	case "grid_cursor_goto":
-		// Additional entries: grid, row, column
-
-	case "grid_scroll":
-		// Additional entries: grid, top, bot, left, right, rows, cols
-
-	case "resize":
-		// Additional entries: width, height
-
-	case "clear":
-		// No additional entries
-
-	case "eol_clear":
-		// No additional entries
-
-	case "cursor_goto":
-		// Move the cursor to position (row, col). Currently, the same cursor is
-		// used to define the position for text insertion and the visible
-		// cursor. However, only the last cursor position, after processing the
-		// entire array in the "redraw" event, is intended to be a visible cursor
-		// position.
-		// Additional entries: row, col
-		pos := event[1].([]interface{})
-		row, _ := pos[0].(int64)
-		col, _ := pos[1].(int64)
-		n.cursorRow = int(row)
-		n.cursorCol = int(col)
-
-	// Events to set the default colors
-	// Additional entries: color
-	case "update_fg":
-		defaultHL.Fg = extractRGBAFromEvent(event, 0)
-	case "update_bg":
-		defaultHL.Bg = extractRGBAFromEvent(event, 0)
-	case "update_sp":
-		defaultHL.Special = extractRGBAFromEvent(event, 0)
-	case "highlight_set":
-		// Set the attributes that the next text put on the grid will have.
-		// Additional entries: attrs which is a dictionary
-		m := event[1].([]interface{})[0].(map[string]interface{})
-		newHL := highlight{
-			Fg:      defaultHL.Fg,
-			Bg:      defaultHL.Bg,
-			Special: defaultHL.Special,
-		}
-		setHLFromMap(m, &defaultHL)
-		n.hl = newHL
-
-	case "put":
-		// The (utf-8 encoded) string text is put at the cursor position (and
-		// the cursor is advanced), with the highlights as set by the last
-		// highlight_set update.
-		// Additional entries: text
-		for _, s := range event[1:] {
-			r := s.([]interface{})[0].(string)
-			// TODO : can there be more than one rune in r?
-			n.writeRune(rune(r[0]))
+	for _, e := range event[1:] {
+		entries, ok := e.([]interface{})
+		if !ok {
+			entries = []interface{}{e}
 		}
 
-	case "set_scroll_region":
-		// Additional entries: top, bot, left, right
+		switch event[0] {
 
-	case "scroll":
-		// Additional entries: count
+		//------------------------------Global Events-------------------------------
 
-	case "win_pos":
-		// Additional entries: grid, win, start_row, start_col, width, height
+		case "set_title":
+			// Additional entries: title
 
-	case "win_float_pos":
-		// Additional entries: grid, win, anchor, anchor_grid, anchor_row, anchor_col, focusable
+		case "set_icon":
+			// Additional entries: icon
 
-	case "win_external_pos":
-		// Additional entries: grid, win
+		case "mode_info_set":
+			// Additional entries: cursor_style_enabled, mode_info
 
-	case "win_hide":
-		// Additional entries: grid
+		case "option_set":
+			// Additional entries: name, value
 
-	case "win_close":
-		// Additional entries: grid
+		case "chdir":
+			// Additional entries: path
 
-	case "msg_set_pos":
-		// Additional entries: grid, row, scrolled, sep_char
+		case "mode_change":
+			// Additional entries: mode, mode_idx
 
-	case "win_viewport":
-		// Additional entries: grid, win, topline, botline, curline, curcol, line_count, scroll_delta
+		case "mouse_on":
+			// No additional entries
 
-	case "win_extmark":
-		// Additional entries: grid, win, ns_id, mark_id, row, col
+		case "mouse_off":
+			// No additional entries
 
-	case "popupmenu_show":
-		// Additional entries: items, selected, row, col, grid
+		case "busy_start":
+			// No additional entries
 
-	case "popupmenu_select":
-		// Additional entries: selected
+		case "busy_stop":
+			// No additional entries
 
-	case "popupmenu_hide":
-		// No additional entries
+		case "suspend":
+			// No additional entries
 
-	case "tabline_update":
-		// Additional entries: curtab, tabs, curbuf, buffers
+		case "update_menu":
+			// No additional entries
 
-	case "cmdline_show":
-		// Additional entries: content, pos, firstc, prompt, indent, level
+		case "bell":
+			// No additional entries
 
-	case "cmdline_pos":
-		// Additional entries: pos, level
+		case "visual_bell":
+			// No additional entries
 
-	case "cmdline_special_char":
-		// Additional entries: c, shift, level
+		case "flush":
+			// Nvim is done redrawing the screen. For an implementation that renders
+			// to an internal buffer, this is the time to display the redrawn parts
+			// to the user.
+			// No additional entries
 
-	case "cmdline_hide":
-		// No additional entries
+			n.Refresh()
 
-	case "cmdline_block_show":
-		// Additional entries: lines
+		//-------------------------Grid Events (line-based)-------------------------
 
-	case "cmdline_block_append":
-		// Additional entries: line
+		case "grid_resize":
+			// The grid is resized to width and height cells.
+			// Additional entries: grid, width, height
 
-	case "cmdline_block_hide":
-		// No additional entries
+		case "default_colors_set":
+			// The RGB values will always be valid colors, by default. If no colors
+			// have been set, they will default to black and white, depending on
+			// 'background'. By setting the ext_termcolors option, instead -1 will
+			// be used for unset colors. This is mostly useful for a TUI
+			// implementation, where using the terminal builtin ("ANSI") defaults
+			// are expected.
+			// Note: Unlike the corresponding ui-grid-old events, the screen is not
+			// always cleared after sending this event. The UI must repaint the
+			// screen with changed background color itself.
+			// Additional entries: rgb_fg, rgb_bg, rgb_sp, cterm_fg, cterm_bg
 
-	case "msg_show":
-		// Additional entries: kind, content, replace_last
+			defaultHL.Fg, _ = extractRGBA(entries[0])
+			defaultHL.Bg, _ = extractRGBA(entries[1])
+			defaultHL.Special, _ = extractRGBA(entries[2])
+			// cterm_fg, cterm_bg are ignored
+			n.Refresh()
 
-	case "msg_clear":
-		// No additional entries
+		case "hl_attr_define":
+			// Add a new highlight with id to the highlight table. rgb_attr carries
+			// information on fore-/background, special color, text attributes and
+			// underline styles. cterm_attr is relevant for 256-color terminals so
+			// it is ignored. info is used by the ext_hlstate extension.
+			// Additional entries: id, rgb_attr, cterm_attr, info
 
-	case "msg_showmode":
-		// Additional entries: content
+			id, _ := intOrUintToInt(entries[0])
 
-	case "msg_showcmd":
-		// Additional entries: content
+			rgbAttr := entries[1].(map[string]interface{})
 
-	case "msg_ruler":
-		// Additional entries: content
+			newHL := highlight{
+				Fg:      defaultHL.Fg,
+				Bg:      defaultHL.Bg,
+				Special: defaultHL.Special,
+			}
+			setHLFromMap(rgbAttr, &newHL)
+			n.hl[id] = newHL
 
-	case "msg_history_show":
-		// Additional entries: entries
+			// TODO : process info
 
-	case "msg_history_clear":
-		// No additional entries
+		case "hl_group_set":
+			// The built-in highlight group name was set to use the attributes hl_id
+			// defined by a previous hl_attr_define call. This event is not needed
+			// to render the grids which use attribute ids directly, but is useful
+			// for a UI who want to render its own elements with consistent
+			// highlighting. For instance a UI using ui-popupmenu events, might use
+			// the hl-Pmenu family of builtin highlights.
+			// Additional entries: name, hl_id
 
-	default:
-		// Handle unknown entry type
-		fmt.Println("Unknown event type: ", event[0])
+		case "grid_line":
+			// Write row from col_start with cells. Cells is an array of arrays each
+			// with 1 to 3 items: [text(, hl_id, repeat)]. The text should be
+			// styled with the colorscheme at hl_id in the table. If no hl_id is
+			// provided, use the most recent from this call (is always present for
+			// the first cell). repeat is a number indicating how many times cell
+			// should be placed.
+			// The right cell of a double-width char will be represented as the
+			// empty string. Double-width chars never use repeat.
+			// wrap is a boolean indicating that this line wraps to the next row.
+			// When redrawing a line which wraps to the next row, Nvim will emit a
+			// grid_line event covering the last column of the line with wrap set
+			// to true, followed immediately by a grid_line event starting at the
+			// first column of the next row.
+			// Additional entries: grid, row, col_start, cells, wrap
+
+			// TODO : I suppose we have to differentiate between grids
+			// TODO : I think we can move the first type assertion out of the switch
+
+			// fmt.Println("Print row ", entries[1])
+			row, _ := intOrUintToInt(entries[1])
+			col, _ := intOrUintToInt(entries[2])
+			cells := entries[3].([]interface{})
+			// wrap := entries[4].(bool) // TODO : use wrap
+
+			lastHL_id := 0
+			for _, cell := range cells {
+				cell := cell.([]interface{})
+				s := cell[0].(string)
+				r := rune(s[0])
+
+				if len(cell) > 1 {
+					lastHL_id, _ = intOrUintToInt(cell[1])
+				}
+
+				repeat := 1
+				if len(cell) > 2 {
+					repeat, _ = intOrUintToInt(cell[2])
+				}
+
+				for i := 0; i < repeat; i++ {
+					n.writeRune(row, col, r, lastHL_id)
+					if len(s) > 1 {
+						n.writeRune(row, col, ' ', lastHL_id)
+					}
+					col++
+				}
+			}
+
+		case "grid_clear":
+			// Clear a grid
+			// Additional entries: grid
+
+			// TODO : I suppose we have to differentiate between grids
+			for i := range n.content.Rows {
+				for j := range n.content.Rows[i].Cells {
+					n.content.Rows[i].Cells[j].Rune = ' '
+				}
+			}
+
+		case "grid_destroy":
+			// Grid will not be used anymore and the UI can free any data associated
+			// with it.
+			// Additional entries: grid
+
+			// TODO : I suppose we have to differentiate between grids
+			n.content = nil
+
+		case "grid_cursor_goto":
+			// Makes grid the current grid and row, column the cursor position on
+			// this grid. This event will be sent at most once in a redraw batch and
+			// indicates the visible cursor position.
+			// Additional entries: grid, row, column
+			_ = entries[0].(int64) // TODO : use grid
+			row, _ := entries[1].(int64)
+			col, _ := entries[2].(int64)
+			n.cursorRow = int(row)
+			n.cursorCol = int(col)
+
+		case "grid_scroll":
+			// Additional entries: grid, top, bot, left, right, rows, cols
+
+		default:
+			// Handle unknown entry type
+			fmt.Println("Unknown event type: ", event[0])
+		}
 	}
 }
 
@@ -253,9 +225,10 @@ func setHLFromMap(personMap map[string]interface{}, target *highlight) {
 		tag := field.Tag.Get("map")
 		if value, ok := personMap[tag]; ok {
 			if field.Type == reflect.TypeOf(color.RGBA{}) {
-				value, ok = extractRGBA[uint64](value)
+				value, _ = extractRGBA(value)
 				if !ok {
-					value, _ = extractRGBA[int64](value)
+					fmt.Println("Unknown type: ", value)
+					continue
 				}
 			}
 			targetValue.Field(i).Set(reflect.ValueOf(value))
@@ -267,24 +240,21 @@ func setHLFromMap(personMap map[string]interface{}, target *highlight) {
 	}
 }
 
-// A helper to wrap the extraction of RGBA colors from nvim events
-func extractRGBAFromEvent(event []interface{}, pos int) color.RGBA {
-	entry := event[1].([]interface{})[pos]
-	c, ok := extractRGBA[uint64](entry)
-	if !ok {
-		c, _ = extractRGBA[int64](entry)
+func intOrUintToInt(i interface{}) (int, bool) {
+	switch i.(type) {
+	case uint64:
+		return int(i.(uint64)), true
+	case int64:
+		return int(i.(int64)), true
+	default:
+		fmt.Println("Unknown type: ", i)
+		return 0, false
 	}
-	return c
-}
-
-// Constraint for the color in nvim events
-type NvimColor interface {
-	uint64 | int64
 }
 
 // Expects a uint64 or int64 and returns its corresponding color.RGBA
-func extractRGBA[T NvimColor](i interface{}) (color.RGBA, bool) {
-	n, ok := i.(T)
+func extractRGBA(i interface{}) (color.RGBA, bool) {
+	n, ok := intOrUintToInt(i)
 	if !ok {
 		return color.RGBA{}, false
 	}
@@ -297,26 +267,28 @@ func extractRGBA[T NvimColor](i interface{}) (color.RGBA, bool) {
 }
 
 // Writes a rune to the textgrid
-func (n *NeoVim) writeRune(r rune) {
-	currRow, currCol := n.cursorRow, n.cursorCol
+func (n *NeoVim) writeRune(row int, col int, r rune, hl_id int) {
 
 	// make sure the and columns exist
-	for len(n.content.Rows)-1 < currRow {
+	for len(n.content.Rows)-1 < row {
 		n.content.Rows = append(n.content.Rows, widget.TextGridRow{})
 	}
 
-	fg, bg := n.hl.Fg, n.hl.Bg
+	colorScheme, ok := n.hl[hl_id]
+	if !ok {
+		colorScheme = defaultHL
+	}
+	fg, bg := colorScheme.Fg, colorScheme.Bg
 	cellStyle := &widget.CustomTextGridStyle{FGColor: fg, BGColor: bg}
 
-	for len(n.content.Rows[currRow].Cells)-1 < currCol {
+	for len(n.content.Rows[row].Cells)-1 < col {
 		newCell := widget.TextGridCell{
 			Rune:  ' ',
 			Style: cellStyle,
 		}
-		n.content.Rows[currRow].Cells = append(n.content.Rows[currRow].Cells, newCell)
+		n.content.Rows[row].Cells = append(n.content.Rows[row].Cells, newCell)
 	}
 
-	n.content.SetCell(currRow, currCol, widget.TextGridCell{Rune: r, Style: cellStyle})
-
-	n.cursorCol++
+	// fmt.Println("with color: ", fg, bg, " write '", string(r), "' to ", row, col)
+	n.content.SetCell(row, col, widget.TextGridCell{Rune: r, Style: cellStyle})
 }
