@@ -183,21 +183,28 @@ func (r *render) MinSize() fyne.Size {
 // The Refresh() method is triggered when the widget this renderer draws has
 // changed or if the theme is altered
 func (r *render) Refresh() {
-	// draw the cursor by inverting fore- and background
-	fg, bg := color.Black, color.White
-	cellStyle := &widget.CustomTextGridStyle{FGColor: fg, BGColor: bg}
+	r.refreshCursor()
+	r.content.Refresh()
+}
+
+// refreshCursor draws the cursor
+func (r *render) refreshCursor() {
+	cellStyle := &widget.CustomTextGridStyle{
+		FGColor: r.NeoVim.hl.Bg,
+		BGColor: color.RGBA{255, 255, 255, 180},
+	}
+
 	currentRune := ' '
 	if r.cursorRow >= 0 && r.cursorRow < len(r.content.Rows) &&
 		r.cursorCol >= 0 && r.cursorCol < len(r.content.Rows[r.cursorRow].Cells) {
 		currentRune = r.content.Rows[r.cursorRow].Cells[r.cursorCol].Rune
 	}
+
 	cursorCell := widget.TextGridCell{
 		Rune:  currentRune,
 		Style: cellStyle,
 	}
 	r.content.SetCell(r.cursorRow, r.cursorCol, cursorCell)
-
-	r.content.Refresh()
 }
 
 // Objects implements fyne.WidgetRenderer
