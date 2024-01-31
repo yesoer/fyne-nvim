@@ -216,4 +216,5 @@ func (r *render) Objects() []fyne.CanvasObject {
 // Is called when this renderer is no longer needed so it should clear any
 // resources that would otherwise leak
 func (r *render) Destroy() {
+	r.engine.Close()
 }
