@@ -3,8 +3,10 @@ package nvim
 import (
 	"fmt"
 	"image/color"
+	"math"
 
 	"fyne.io/fyne/v2"
+	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/driver/desktop"
 	"fyne.io/fyne/v2/widget"
 	"github.com/neovim/go-client/nvim"
@@ -83,6 +85,15 @@ func New() *NeoVim {
 	return neovim
 }
 
+// Helper to estimate the size of a cell in the textgrid
+func guessCellSize() fyne.Size {
+	cell := canvas.NewText("M", color.White)
+	cell.TextStyle.Monospace = true
+
+	min := cell.MinSize()
+	return fyne.NewSize(float32(math.Round(float64(min.Width))), float32(math.Round(float64(min.Height))))
+}
+
 // Helper to start neovim
 func (n *NeoVim) startNeovim() error {
 	// start neovim
@@ -97,8 +108,8 @@ func (n *NeoVim) startNeovim() error {
 	uiOpt := make(map[string]any)
 	uiOpt["ext_hlstate"] = true  // detailed highlight state
 	uiOpt["ext_linegrid"] = true // new line based grid events
-	// TODO : calculate the number of rows and columns
 	uiOpt["ext_multigrid"] = false
+	// TODO : what should the initial size be ?
 	err = nvimInstance.AttachUI(100, 100, uiOpt)
 	if err != nil {
 		return err
@@ -119,6 +130,19 @@ func (n *NeoVim) startNeovim() error {
 func (n *NeoVim) Resize(s fyne.Size) {
 	n.BaseWidget.Resize(s) // must be included
 	n.content.Resize(s)
+	n.resizeGrid(s)
+}
+
+// Resizes the neovim internal grid
+func (n *NeoVim) resizeGrid(s fyne.Size) {
+	cellSize := guessCellSize()
+	rowsCnt := int(s.Height / cellSize.Height)
+	colsCnt := int(s.Width / cellSize.Width)
+
+	err := n.engine.TryResizeUIGrid(GLOBAL_GRID, colsCnt, rowsCnt)
+	if err != nil {
+		fmt.Println("Error resizing grid: ", err)
+	}
 }
 
 // CreateRenderer implements fyne.Widget
