@@ -100,7 +100,8 @@ func (n *NeoVim) HandleNvimEvent(event []interface{}) {
 			// Add a new highlight with id to the highlight table. rgb_attr carries
 			// information on fore-/background, special color, text attributes and
 			// underline styles. cterm_attr is relevant for 256-color terminals so
-			// it is ignored. info is used by the ext_hlstate extension.
+			// it is ignored. info is used by the ext_hlstate extension to add
+			// semantic information.
 			// Additional entries: id, rgb_attr, cterm_attr, info
 
 			id, _ := intOrUintToInt(entries[0])
@@ -142,7 +143,6 @@ func (n *NeoVim) HandleNvimEvent(event []interface{}) {
 			// first column of the next row.
 			// Additional entries: grid, row, col_start, cells, wrap
 
-			// TODO : I suppose we have to differentiate between grids
 			// TODO : I think we can move the first type assertion out of the switch
 
 			// fmt.Println("Print row ", entries[1])
@@ -179,7 +179,6 @@ func (n *NeoVim) HandleNvimEvent(event []interface{}) {
 			// Clear a grid
 			// Additional entries: grid
 
-			// TODO : I suppose we have to differentiate between grids
 			for i := range n.content.Rows {
 				for j := range n.content.Rows[i].Cells {
 					n.content.Rows[i].Cells[j].Rune = ' '
@@ -191,7 +190,6 @@ func (n *NeoVim) HandleNvimEvent(event []interface{}) {
 			// with it.
 			// Additional entries: grid
 
-			// TODO : I suppose we have to differentiate between grids
 			n.content = nil
 
 		case "grid_cursor_goto":
@@ -199,7 +197,7 @@ func (n *NeoVim) HandleNvimEvent(event []interface{}) {
 			// this grid. This event will be sent at most once in a redraw batch and
 			// indicates the visible cursor position.
 			// Additional entries: grid, row, column
-			_ = entries[0].(int64) // TODO : use grid
+
 			row, _ := entries[1].(int64)
 			col, _ := entries[2].(int64)
 			n.cursorRow = int(row)

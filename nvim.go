@@ -10,6 +10,9 @@ import (
 	"github.com/neovim/go-client/nvim"
 )
 
+// As long as multigrid isn't used there will only be one grid
+const GLOBAL_GRID = 1
+
 // Declare conformity with the widget interface
 var _ fyne.Widget = (*NeoVim)(nil)
 
@@ -99,6 +102,7 @@ func (n *NeoVim) startNeovim() error {
 	uiOpt["ext_hlstate"] = true  // detailed highlight state
 	uiOpt["ext_linegrid"] = true // new line based grid events
 	// TODO : calculate the number of rows and columns
+	uiOpt["ext_multigrid"] = false
 	err = nvimInstance.AttachUI(100, 100, uiOpt)
 	if err != nil {
 		return err
