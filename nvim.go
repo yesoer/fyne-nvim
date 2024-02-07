@@ -16,9 +16,6 @@ const GLOBAL_GRID = 1
 // Declare conformity with the widget interface
 var _ fyne.Widget = (*NeoVim)(nil)
 
-// TODO : Other interfaces we might want to implement :
-// - validatable
-
 // Declare conformity with the shortcut interface
 // So that we can receive and handle shortcut events, which includes modifiers
 // For support of other shortcuts add fyne.ShortCutHandler
@@ -28,7 +25,6 @@ var _ fyne.Shortcutable = (*NeoVim)(nil)
 // So that we can receive and handle text input events
 var _ fyne.Focusable = (*NeoVim)(nil)
 
-// Colorscheme
 type highlight struct {
 	Fg      color.RGBA `map:"foreground"`
 	Bg      color.RGBA `map:"background"`
@@ -67,7 +63,7 @@ type NeoVim struct {
 	content              *widget.TextGrid
 	cursorRow, cursorCol int
 	engine               *nvim.Nvim
-	hl                   map[int]highlight // the color scheme table
+	hl                   map[int]highlight // the highlight table used by ext_hlstate
 }
 
 // Create a new NeoVim widget
