@@ -264,20 +264,13 @@ func extractRGBA(i interface{}) (color.RGBA, bool) {
 	return color.RGBA{uint8(r), uint8(g), uint8(b), uint8(a)}, true
 }
 
-// Writes a rune to the textgrid
-func (n *NeoVim) writeRune(row int, col int, r rune, hl_id int) {
-
-	// make sure the and columns exist
+// Make sure the rows and columns exist, if not create them
+func (n *NeoVim) fillGrid(row, col int, hl highlight) {
 	for len(n.content.Rows)-1 < row {
 		n.content.Rows = append(n.content.Rows, widget.TextGridRow{})
 	}
 
-	colorScheme, ok := n.hl[hl_id]
-	if !ok {
-		colorScheme = defaultHL
-	}
-	fg, bg := colorScheme.Fg, colorScheme.Bg
-	cellStyle := &widget.CustomTextGridStyle{FGColor: fg, BGColor: bg}
+	cellStyle := &widget.CustomTextGridStyle{FGColor: hl.Fg, BGColor: hl.Bg}
 
 	for len(n.content.Rows[row].Cells)-1 < col {
 		newCell := widget.TextGridCell{
@@ -286,7 +279,17 @@ func (n *NeoVim) writeRune(row int, col int, r rune, hl_id int) {
 		}
 		n.content.Rows[row].Cells = append(n.content.Rows[row].Cells, newCell)
 	}
+}
 
-	// fmt.Println("with color: ", fg, bg, " write '", string(r), "' to ", row, col)
+// Writes a rune to the textgrid
+func (n *NeoVim) writeRune(row int, col int, r rune, hl_id int) {
+
+	hl, ok := n.hl[hl_id]
+	if !ok {
+		hl = defaultHL
+	}
+	n.fillGrid(row, col, hl)
+
+	cellStyle := &widget.CustomTextGridStyle{FGColor: hl.Fg, BGColor: hl.Bg}
 	n.content.SetCell(row, col, widget.TextGridCell{Rune: r, Style: cellStyle})
 }
