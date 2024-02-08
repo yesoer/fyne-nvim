@@ -8,6 +8,12 @@ import (
 	"fyne.io/fyne/v2/widget"
 )
 
+// Handles events for the NeoVim instance
+// Currently only the following event groups are handled:
+// - Global Events
+// - Grid Events (line-based)
+// For the documentation of the events see:
+// https://neovim.io/doc/user/ui.html
 func (n *NeoVim) HandleNvimEvent(event []interface{}) {
 	// fmt.Println("Handling event: ", event)
 	// fmt.Println("Handling event: ", event[0])
@@ -78,6 +84,9 @@ func (n *NeoVim) HandleNvimEvent(event []interface{}) {
 			// The grid is resized to width and height cells.
 			// Additional entries: grid, width, height
 
+			// Don't think this is needed as this event is only triggered by use
+			// when we've already processed the new size
+
 		case "default_colors_set":
 			// The RGB values will always be valid colors, by default. If no colors
 			// have been set, they will default to black and white, depending on
@@ -116,7 +125,8 @@ func (n *NeoVim) HandleNvimEvent(event []interface{}) {
 			setHLFromMap(rgbAttr, &newHL)
 			n.hl[id] = newHL
 
-			// TODO : process info
+			// info is ignored since we don't need semantic information as of
+			// now
 
 		case "hl_group_set":
 			// The built-in highlight group name was set to use the attributes hl_id
@@ -143,9 +153,6 @@ func (n *NeoVim) HandleNvimEvent(event []interface{}) {
 			// first column of the next row.
 			// Additional entries: grid, row, col_start, cells, wrap
 
-			// TODO : I think we can move the first type assertion out of the switch
-
-			// fmt.Println("Print row ", entries[1])
 			row, _ := intOrUintToInt(entries[1])
 			col, _ := intOrUintToInt(entries[2])
 			cells := entries[3].([]interface{})
