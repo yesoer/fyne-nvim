@@ -204,7 +204,47 @@ func (n *NeoVim) HandleNvimEvent(event []interface{}) {
 			n.cursorCol = int(col)
 
 		case "grid_scroll":
+			// Scroll a region of grid. This is semantically unrelated to editor
+			// scrolling, rather this is an optimized way to say "copy these
+			// screen cells".
+			// If rows is bigger than 0, move a rectangle in the SR up,
+			// this can happen while scrolling down.
+			// If rows is less than zero, move a rectangle in the SR down, this
+			// can happen while scrolling up.
+			// cols is always zero in this version of Nvim, and reserved for
+			// future use.
+			// The scrolled-in area will be filled using ui-event-grid_line
+			// directly after the scroll event. The UI thus doesn't need to
+			// clear this area as part of handling the scroll event.
 			// Additional entries: grid, top, bot, left, right, rows, cols
+
+			top, _ := intOrUintToInt(entries[1])
+			bot, _ := intOrUintToInt(entries[2])
+			left, _ := intOrUintToInt(entries[3])
+			right, _ := intOrUintToInt(entries[4])
+			rows, _ := intOrUintToInt(entries[5])
+
+			if rows > 0 {
+				// Scroll down
+				for row := top; row < bot-rows; row++ {
+					for col := left; col <= right; col++ {
+						n.fillGrid(row, col, defaultHL)
+
+						cell := n.content.Rows[row+rows].Cells[col]
+						n.content.Rows[row].Cells[col] = cell
+					}
+				}
+			} else {
+				// Scroll up, start at bot-1 to skip the status line
+				for row := bot - 1; row > top+(-rows); row-- {
+					for col := left; col <= right; col++ {
+						n.fillGrid(row, col, defaultHL)
+
+						cell := n.content.Rows[row+rows].Cells[col]
+						n.content.Rows[row].Cells[col] = cell
+					}
+				}
+			}
 
 		default:
 			// Handle unknown entry type
