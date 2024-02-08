@@ -12,6 +12,12 @@ import (
 	"github.com/neovim/go-client/nvim"
 )
 
+// According to https://neovim.io/doc/user/options.html it seems that
+// neovim is supposed to have at least 12 columns and 1 row
+// In practice the neovim client didn't work with less than 13x1
+const MIN_ROWS = 1
+const MIN_COLS = 13
+
 // As long as multigrid isn't used there will only be one grid
 const GLOBAL_GRID = 1
 
@@ -109,9 +115,9 @@ func (n *NeoVim) startNeovim() error {
 	uiOpt["ext_hlstate"] = true  // detailed highlight state
 	uiOpt["ext_linegrid"] = true // new line based grid events
 	uiOpt["ext_multigrid"] = false
-	// TODO : what should the initial size be ?
-	err = nvimInstance.AttachUI(100, 100, uiOpt)
+	err = nvimInstance.AttachUI(MIN_COLS, MIN_ROWS, uiOpt)
 	if err != nil {
+		fmt.Println("Error attaching UI: ", err)
 		return err
 	}
 
@@ -206,7 +212,10 @@ func (r *render) Layout(s fyne.Size) {
 
 // MinSize implements fyne.WidgetRenderer
 func (r *render) MinSize() fyne.Size {
-	return fyne.NewSize(0, 0)
+	cellSize := guessCellSize()
+	minWidth := cellSize.Width * MIN_COLS
+	minHeight := cellSize.Height * MIN_ROWS
+	return fyne.NewSize(minWidth, minHeight)
 }
 
 // Refresh implements fyne.WidgetRenderer
