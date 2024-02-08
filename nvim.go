@@ -68,10 +68,11 @@ type NeoVim struct {
 	// Additional fields
 	// It is standard in a Fyne widget to export the fields which define
 	// behaviour (just like the primitives defined in the canvas package).
-	content              *widget.TextGrid
-	cursorRow, cursorCol int
-	engine               *nvim.Nvim
-	hl                   map[int]highlight // the highlight table used by ext_hlstate
+	content                    *widget.TextGrid
+	cursorRow, cursorCol       int
+	cursorCellFg, cursorCellBg color.Color // store color of the underlying cell
+	engine                     *nvim.Nvim
+	hl                         map[int]highlight // the highlight table used by ext_hlstate
 }
 
 // Create a new NeoVim widget

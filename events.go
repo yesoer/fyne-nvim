@@ -205,10 +205,26 @@ func (n *NeoVim) HandleNvimEvent(event []interface{}) {
 			// indicates the visible cursor position.
 			// Additional entries: grid, row, column
 
-			row, _ := entries[1].(int64)
-			col, _ := entries[2].(int64)
-			n.cursorRow = int(row)
-			n.cursorCol = int(col)
+			oldRow, oldCol := n.cursorRow, n.cursorCol
+			newRow, _ := entries[1].(int64)
+			newCol, _ := entries[2].(int64)
+
+			// recover the previous locations colors on horizontal movement
+			if oldRow == int(newRow) {
+				r := n.content.Rows[oldRow].Cells[oldCol].Rune
+				cellStyle := &widget.CustomTextGridStyle{
+					FGColor: n.cursorCellFg,
+					BGColor: n.cursorCellBg,
+				}
+				recoveredCell := widget.TextGridCell{Rune: r, Style: cellStyle}
+				n.content.SetCell(oldRow, oldCol, recoveredCell)
+			}
+
+			newCell := n.content.Rows[newRow].Cells[newCol]
+			n.cursorCellFg = newCell.Style.TextColor()
+			n.cursorCellBg = newCell.Style.BackgroundColor()
+			n.cursorRow = int(newRow)
+			n.cursorCol = int(newCol)
 
 		case "grid_scroll":
 			// Scroll a region of grid. This is semantically unrelated to editor
