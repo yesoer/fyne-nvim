@@ -33,6 +33,10 @@ var _ fyne.Shortcutable = (*NeoVim)(nil)
 // So that we can receive and handle text input events
 var _ fyne.Focusable = (*NeoVim)(nil)
 
+// The sentinel value for Fg, Bg and Special to indicate that the coloris not
+// set i.e. the default color should be used
+var RGBA_SENTINEL = color.RGBA{255, 255, 255, 0}
+
 type highlight struct {
 	Fg      color.RGBA `map:"foreground"`
 	Bg      color.RGBA `map:"background"`
@@ -51,12 +55,12 @@ type highlight struct {
 	Underdotted bool `map:"underdotted"`
 	Underdashed bool `map:"underdashed"`
 
-	Altfont interface{} `map:"altfont"` // TODO : implement
-	Blend   interface{} `map:"blend"`   // TODO : implement
+	Altfont interface{} `map:"altfont"`
+	Blend   interface{} `map:"blend"`
 }
 
 var defaultHL = highlight{
-	Fg:      color.RGBA{255, 255, 255, 0},
+	Fg:      color.RGBA{255, 255, 255, 255},
 	Bg:      color.RGBA{0, 0, 0, 255},
 	Special: color.RGBA{0, 0, 0, 255},
 }
