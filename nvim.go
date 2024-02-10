@@ -7,7 +7,6 @@ import (
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/canvas"
-	"fyne.io/fyne/v2/driver/desktop"
 	"fyne.io/fyne/v2/widget"
 	"github.com/neovim/go-client/nvim"
 )
@@ -20,18 +19,6 @@ const MIN_COLS = 13
 
 // As long as multigrid isn't used there will only be one grid
 const GLOBAL_GRID = 1
-
-// Declare conformity with the widget interface
-var _ fyne.Widget = (*NeoVim)(nil)
-
-// Declare conformity with the shortcut interface
-// So that we can receive and handle shortcut events, which includes modifiers
-// For support of other shortcuts add fyne.ShortCutHandler
-var _ fyne.Shortcutable = (*NeoVim)(nil)
-
-// Declare conformity with the focusable interface
-// So that we can receive and handle text input events
-var _ fyne.Focusable = (*NeoVim)(nil)
 
 // The sentinel value for Fg, Bg and Special to indicate that the coloris not
 // set i.e. the default color should be used
@@ -65,6 +52,9 @@ var defaultHL = highlight{
 	Special: color.RGBA{0, 0, 0, 255},
 }
 
+// Declare conformity with the widget interface
+var _ fyne.Widget = (*NeoVim)(nil)
+
 type NeoVim struct {
 	// Widget requirements
 	widget.BaseWidget
@@ -94,15 +84,6 @@ func New() *NeoVim {
 	}
 
 	return neovim
-}
-
-// Helper to estimate the size of a cell in the textgrid
-func guessCellSize() fyne.Size {
-	cell := canvas.NewText("M", color.White)
-	cell.TextStyle.Monospace = true
-
-	min := cell.MinSize()
-	return fyne.NewSize(float32(math.Round(float64(min.Width))), float32(math.Round(float64(min.Height))))
 }
 
 // Helper to start neovim
@@ -161,104 +142,11 @@ func (n *NeoVim) CreateRenderer() fyne.WidgetRenderer {
 	return &render{n}
 }
 
-// FocusGained implements fyne.Focusable
-// FocusGained is a hook called by the focus handling logic after this object gained the focus.
-func (n *NeoVim) FocusGained() {
-	n.Refresh()
-}
+// Helper to estimate the size of a cell in the textgrid
+func guessCellSize() fyne.Size {
+	cell := canvas.NewText("M", color.White)
+	cell.TextStyle.Monospace = true
 
-// FocusGained implements fyne.Focusable
-// FocusLost is a hook called by the focus handling logic after this object lost the focus.
-func (n *NeoVim) FocusLost() {
-	n.Refresh()
-}
-
-// FocusGained implements fyne.Focusable
-// TypedRune is a hook called by the input handling logic on text input events if this object is focused.
-func (n *NeoVim) TypedRune(r rune) {
-	n.engine.Input(string(r))
-}
-
-// FocusGained implements fyne.Focusable
-// TypedKey is a hook called by the input handling logic on key events if this object is focused.
-func (n *NeoVim) TypedKey(e *fyne.KeyEvent) {
-	n.engine.Input(neovimKeyMap[e.Name])
-}
-
-// TypedShortcut implements fyne.Shortcutable
-// TypedShortcut handle the registered shortcut
-// TODO : There are other shortcuts e.g. SelectAll (Cmd+A)
-func (n *NeoVim) TypedShortcut(s fyne.Shortcut) {
-	if ds, ok := s.(*desktop.CustomShortcut); ok {
-
-		char := ds.KeyName[0]
-		if ds.Key() == fyne.KeySpace {
-			char = ' '
-		} else if ds.Key() == "@" {
-			char = '@'
-		}
-
-		modifiers := neovimModifierMap[ds.Modifier]
-		n.engine.Input("<" + modifiers + string(char) + ">")
-	}
-}
-
-// Declare conformity with the widget renderer interface
-var _ fyne.WidgetRenderer = (*render)(nil)
-
-type render struct {
-	*NeoVim
-}
-
-// Layout implements fyne.WidgetRenderer
-func (r *render) Layout(s fyne.Size) {
-	r.content.Resize(s)
-}
-
-// MinSize implements fyne.WidgetRenderer
-func (r *render) MinSize() fyne.Size {
-	cellSize := guessCellSize()
-	minWidth := cellSize.Width * MIN_COLS
-	minHeight := cellSize.Height * MIN_ROWS
-	return fyne.NewSize(minWidth, minHeight)
-}
-
-// Refresh implements fyne.WidgetRenderer
-// The Refresh() method is triggered when the widget this renderer draws has
-// changed or if the theme is altered
-func (r *render) Refresh() {
-	r.refreshCursor()
-	r.content.Refresh()
-}
-
-// refreshCursor draws the cursor
-func (r *render) refreshCursor() {
-	cellStyle := &widget.CustomTextGridStyle{
-		FGColor: color.RGBA{200, 200, 200, 180},
-		BGColor: color.RGBA{255, 255, 255, 180},
-	}
-
-	currentRune := ' '
-	if r.cursorRow >= 0 && r.cursorRow < len(r.content.Rows) &&
-		r.cursorCol >= 0 && r.cursorCol < len(r.content.Rows[r.cursorRow].Cells) {
-		currentRune = r.content.Rows[r.cursorRow].Cells[r.cursorCol].Rune
-	}
-
-	cursorCell := widget.TextGridCell{
-		Rune:  currentRune,
-		Style: cellStyle,
-	}
-	r.content.SetCell(r.cursorRow, r.cursorCol, cursorCell)
-}
-
-// Objects implements fyne.WidgetRenderer
-func (r *render) Objects() []fyne.CanvasObject {
-	return []fyne.CanvasObject{r.content}
-}
-
-// Destroy implements fyne.WidgetRenderer
-// Is called when this renderer is no longer needed so it should clear any
-// resources that would otherwise leak
-func (r *render) Destroy() {
-	r.engine.Close()
+	min := cell.MinSize()
+	return fyne.NewSize(float32(math.Round(float64(min.Width))), float32(math.Round(float64(min.Height))))
 }
