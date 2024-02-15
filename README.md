@@ -60,6 +60,17 @@ func main() {
 When confused, no worries, just publish what you have. 
 A not perfectly structured contribution is still far better than nothing.
 
+#### Code Style
+
+For formatting this project uses `go fmt`. There is a github action for it to
+ensure nothing gets merged not following the style but I'd like to not flood the
+commit history with such commits, so ideally you'd configure your environment 
+accordingly/run `go fmt` before pushing.
+
+Apart from that if you have anything you're unsure about you may refer to the
+[fyne code style](https://github.com/fyne-io/fyne/wiki/Contributing#code-style)
+though as of now I do not intend to follow it down to the smallest detail.
+
 #### Branch Naming 
 
 Branch names should look like this
