@@ -139,8 +139,8 @@ Don't be afraid to ask for more information.
 
 ### Resources
 
-[Neovim UI Event Docs](https://neovim.io/doc/user/ui.html)
-[Neovim UI API Docs](https://neovim.io/doc/user/api.html#api-ui)
-[Fyne Custom Widget Docs](https://docs.fyne.io/extend/custom-widget) with a more detailed example [on github](https://github.com/stuartdd2/developer.fyne.io/blob/master/extend/custom-widget.md)
+- [Neovim UI Event Docs](https://neovim.io/doc/user/ui.html)
+- [Neovim UI API Docs](https://neovim.io/doc/user/api.html#api-ui)
+- [Fyne Custom Widget Docs](https://docs.fyne.io/extend/custom-widget) with a more detailed example [on github](https://github.com/stuartdd2/developer.fyne.io/blob/master/extend/custom-widget.md)
 
 To me the [fyne terminal project](https://github.com/fyne-io/terminal) was very helpful as well.
