@@ -250,7 +250,7 @@ func (n *NeoVim) HandleNvimEvent(event []interface{}) {
 			if rows > 0 {
 				// Scroll down
 				for row := top; row < bot-rows; row++ {
-					for col := left; col <= right; col++ {
+					for col := left; col < right; col++ {
 						n.fillGrid(row, col, defaultHL)
 
 						cell := n.content.Rows[row+rows].Cells[col]
@@ -260,7 +260,7 @@ func (n *NeoVim) HandleNvimEvent(event []interface{}) {
 			} else {
 				// Scroll up, start at bot-1 to skip the status line
 				for row := bot - 1; row > top+(-rows); row-- {
-					for col := left; col <= right; col++ {
+					for col := left; col < right; col++ {
 						n.fillGrid(row, col, defaultHL)
 
 						cell := n.content.Rows[row+rows].Cells[col]
