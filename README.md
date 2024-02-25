@@ -134,7 +134,7 @@ Don't be afraid to ask for more information.
 | nvim.go     | Implements the widget interface i.e. is the center of this project |
 | render.go   | Implements the renderer for our widget as required for custom widgets |
 | input.go    | Using the mappings from keymap.go this forwards inputs from Fyne to Neovim |
-| output.go   | Provides functions to write runes etc. to the textgrid which visualizes Neovim |
+| output.go   | Provides functions to write runes etc. to the textgrid which visualizes Neovim. Should only be used from the handler in events.go, as they are not implemented for concurrent use. |
 | events.go   | Process the events received from Neovim (uses output.go to forward visual changes to Fyne) |
 
 ### Resources
