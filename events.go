@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"image/color"
 	"reflect"
-
-	"fyne.io/fyne/v2/widget"
 )
 
 // Handles events for the NeoVim instance
@@ -158,39 +156,13 @@ func (n *NeoVim) HandleNvimEvent(event []interface{}) {
 			cells := entries[3].([]interface{})
 			// wrap := entries[4].(bool) // TODO : use wrap
 
-			lastHL_id := 0
-			for _, cell := range cells {
-				cell := cell.([]interface{})
-				s := cell[0].(string)
-				r := rune(s[0])
-
-				if len(cell) > 1 {
-					lastHL_id, _ = intOrUintToInt(cell[1])
-				}
-
-				repeat := 1
-				if len(cell) > 2 {
-					repeat, _ = intOrUintToInt(cell[2])
-				}
-
-				for i := 0; i < repeat; i++ {
-					n.writeRune(row, col, r, lastHL_id)
-					if len(s) > 1 {
-						n.writeRune(row, col, ' ', lastHL_id)
-					}
-					col++
-				}
-			}
+			n.WriteGridLine(row, col, cells)
 
 		case "grid_clear":
 			// Clear a grid
 			// Additional entries: grid
 
-			for i := range n.content.Rows {
-				for j := range n.content.Rows[i].Cells {
-					n.content.Rows[i].Cells[j].Rune = ' '
-				}
-			}
+			n.ClearGrid()
 
 		case "grid_destroy":
 			// Grid will not be used anymore and the UI can free any data associated
@@ -206,25 +178,10 @@ func (n *NeoVim) HandleNvimEvent(event []interface{}) {
 			// Additional entries: grid, row, column
 
 			oldRow, oldCol := n.cursorRow, n.cursorCol
-			newRow, _ := entries[1].(int64)
-			newCol, _ := entries[2].(int64)
+			newRow, _ := entries[1].(int)
+			newCol, _ := entries[2].(int)
 
-			// recover the previous locations colors on horizontal movement
-			if oldRow == int(newRow) {
-				r := n.content.Rows[oldRow].Cells[oldCol].Rune
-				cellStyle := &widget.CustomTextGridStyle{
-					FGColor: n.cursorCellFg,
-					BGColor: n.cursorCellBg,
-				}
-				recoveredCell := widget.TextGridCell{Rune: r, Style: cellStyle}
-				n.content.SetCell(oldRow, oldCol, recoveredCell)
-			}
-
-			newCell := n.content.Rows[newRow].Cells[newCol]
-			n.cursorCellFg = newCell.Style.TextColor()
-			n.cursorCellBg = newCell.Style.BackgroundColor()
-			n.cursorRow = int(newRow)
-			n.cursorCol = int(newCol)
+			n.MoveGridCursor(oldRow, oldCol, int(newRow), int(newCol))
 
 		case "grid_scroll":
 			// Scroll a region of grid. This is semantically unrelated to editor
@@ -247,27 +204,7 @@ func (n *NeoVim) HandleNvimEvent(event []interface{}) {
 			right, _ := intOrUintToInt(entries[4])
 			rows, _ := intOrUintToInt(entries[5])
 
-			if rows > 0 {
-				// Scroll down
-				for row := top; row < bot-rows; row++ {
-					for col := left; col < right; col++ {
-						n.fillGrid(row, col, defaultHL)
-
-						cell := n.content.Rows[row+rows].Cells[col]
-						n.content.Rows[row].Cells[col] = cell
-					}
-				}
-			} else {
-				// Scroll up, start at bot-1 to skip the status line
-				for row := bot - 1; row > top+(-rows); row-- {
-					for col := left; col < right; col++ {
-						n.fillGrid(row, col, defaultHL)
-
-						cell := n.content.Rows[row+rows].Cells[col]
-						n.content.Rows[row].Cells[col] = cell
-					}
-				}
-			}
+			n.ScrollGrid(top, bot, left, right, rows)
 
 		default:
 			// Handle unknown entry type
