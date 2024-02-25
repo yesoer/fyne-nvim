@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"image/color"
 	"reflect"
+
+	"fyne.io/fyne/v2"
 )
 
 // Handles events for the NeoVim instance
@@ -12,9 +14,11 @@ import (
 // - Grid Events (line-based)
 // For the documentation of the events see:
 // https://neovim.io/doc/user/ui.html
+// The go client calls this function sequentially for each event, so we don't
+// have to worry about preserving order
 func (n *NeoVim) HandleNvimEvent(event []interface{}) {
 	// fmt.Println("Handling event: ", event)
-	// fmt.Println("Handling event: ", event[0])
+	fmt.Println("Handling event: ", event[0])
 
 	for _, e := range event[1:] {
 		entries, ok := e.([]interface{})
@@ -82,8 +86,16 @@ func (n *NeoVim) HandleNvimEvent(event []interface{}) {
 			// The grid is resized to width and height cells.
 			// Additional entries: grid, width, height
 
-			// Don't think this is needed as this event is only triggered by use
-			// when we've already processed the new size
+			colsCnt, _ := intOrUintToInt(entries[1])
+			rowsCnt, _ := intOrUintToInt(entries[2])
+			n.ChangeVisualGridSize(rowsCnt, colsCnt)
+
+			cellSize := guessCellSize()
+			s := fyne.NewSize(float32(colsCnt*int(cellSize.Width)),
+				float32(rowsCnt*int(cellSize.Height)))
+
+			n.BaseWidget.Resize(s) // must be included
+			n.content.Resize(s)
 
 		case "default_colors_set":
 			// The RGB values will always be valid colors, by default. If no colors
@@ -123,7 +135,7 @@ func (n *NeoVim) HandleNvimEvent(event []interface{}) {
 			setHLFromMap(rgbAttr, &newHL)
 			n.hl[id] = newHL
 
-			// info is ignored since we don't need semantic information as of
+			// Info is ignored since we don't need semantic information as of
 			// now
 
 		case "hl_group_set":
