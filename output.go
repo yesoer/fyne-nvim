@@ -82,6 +82,8 @@ func (n *NeoVim) WriteGridLine(row, col int, cells []interface{}) {
 
 // Changes the size of the textgrid, creating or removing rows and columns as
 // needed
+// TODO: One may consider only downsizing rows/cols if the difference is
+// significant
 func (n *NeoVim) ChangeVisualGridSize(targetRow, targetCol int) {
 	// remove rows
 	if targetRow < len(n.content.Rows) {
@@ -99,7 +101,6 @@ func (n *NeoVim) ChangeVisualGridSize(targetRow, targetCol int) {
 		// remove columns
 		numCols := len(n.content.Rows[currRow].Cells)
 		if numCols > targetCol {
-			// TODO : this causes weird behavior
 			n.content.Rows[currRow].Cells =
 				n.content.Rows[currRow].Cells[:targetCol-1]
 		}
