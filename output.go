@@ -2,23 +2,6 @@ package nvim
 
 import "fyne.io/fyne/v2/widget"
 
-// Make sure the rows and columns exist, if not create them
-func (n *NeoVim) fillGrid(row, col int, hl highlight) {
-	for len(n.content.Rows)-1 < row {
-		n.content.Rows = append(n.content.Rows, widget.TextGridRow{})
-	}
-
-	cellStyle := gridStyleFromHL(hl)
-
-	for len(n.content.Rows[row].Cells)-1 < col {
-		newCell := widget.TextGridCell{
-			Rune:  ' ',
-			Style: cellStyle,
-		}
-		n.content.Rows[row].Cells = append(n.content.Rows[row].Cells, newCell)
-	}
-}
-
 // Substitutes all runes with ' '
 func (n *NeoVim) ClearGrid() {
 	for i := range n.content.Rows {
@@ -34,8 +17,6 @@ func (n *NeoVim) ScrollGrid(top, bot, left, right, rows int) {
 		// Scroll down
 		for row := top; row < bot-rows; row++ {
 			for col := left; col < right; col++ {
-				n.fillGrid(row, col, defaultHL)
-
 				cell := n.content.Rows[row+rows].Cells[col]
 				n.content.Rows[row].Cells[col] = cell
 			}
@@ -44,8 +25,6 @@ func (n *NeoVim) ScrollGrid(top, bot, left, right, rows int) {
 		// Scroll up, start at bot-1 to skip the status line
 		for row := bot - 1; row > top+(-rows); row-- {
 			for col := left; col < right; col++ {
-				n.fillGrid(row, col, defaultHL)
-
 				cell := n.content.Rows[row+rows].Cells[col]
 				n.content.Rows[row].Cells[col] = cell
 			}
@@ -101,6 +80,42 @@ func (n *NeoVim) WriteGridLine(row, col int, cells []interface{}) {
 	}
 }
 
+// Changes the size of the textgrid, creating or removing rows and columns as
+// needed
+func (n *NeoVim) ChangeVisualGridSize(targetRow, targetCol int) {
+	// remove rows
+	if targetRow < len(n.content.Rows) {
+		n.content.Rows = n.content.Rows[:targetRow]
+	}
+
+	cellStyle := gridStyleFromHL(defaultHL)
+
+	for currRow := 0; currRow < targetRow; currRow++ {
+		// append new row if needed
+		if currRow > len(n.content.Rows)-1 {
+			n.content.Rows = append(n.content.Rows, widget.TextGridRow{})
+		}
+
+		// remove columns
+		numCols := len(n.content.Rows[currRow].Cells)
+		if numCols > targetCol {
+			// TODO : this causes weird behavior
+			n.content.Rows[currRow].Cells =
+				n.content.Rows[currRow].Cells[:targetCol-1]
+		}
+
+		// append new columns if needed
+		for len(n.content.Rows[currRow].Cells) < targetCol {
+			newCell := widget.TextGridCell{
+				Rune:  ' ',
+				Style: cellStyle,
+			}
+			n.content.Rows[currRow].Cells =
+				append(n.content.Rows[currRow].Cells, newCell)
+		}
+	}
+}
+
 // Writes a rune to the textgrid
 func (n *NeoVim) writeRune(row int, col int, r rune, hl_id int) {
 
@@ -108,7 +123,6 @@ func (n *NeoVim) writeRune(row int, col int, r rune, hl_id int) {
 	if !ok {
 		hl = defaultHL
 	}
-	n.fillGrid(row, col, hl)
 
 	cellStyle := gridStyleFromHL(hl)
 	n.content.SetCell(row, col, widget.TextGridCell{Rune: r, Style: cellStyle})

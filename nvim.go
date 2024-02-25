@@ -120,8 +120,6 @@ func (n *NeoVim) startNeovim() error {
 
 // Override resize to adjust the textgrid
 func (n *NeoVim) Resize(s fyne.Size) {
-	n.BaseWidget.Resize(s) // must be included
-	n.content.Resize(s)
 	n.resizeGrid(s)
 }
 
@@ -131,6 +129,7 @@ func (n *NeoVim) resizeGrid(s fyne.Size) {
 	rowsCnt := int(s.Height / cellSize.Height)
 	colsCnt := int(s.Width / cellSize.Width)
 
+	// Triggers the resize event
 	err := n.engine.TryResizeUIGrid(GLOBAL_GRID, colsCnt, rowsCnt)
 	if err != nil {
 		fmt.Println("Error resizing grid: ", err)
