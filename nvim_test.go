@@ -7,6 +7,6 @@ import (
 )
 
 func TestNewTerminal(t *testing.T) {
-	nvim := New()
+	nvim := New("")
 	assert.NotNil(t, nvim)
 }

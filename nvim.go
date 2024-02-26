@@ -69,8 +69,8 @@ type NeoVim struct {
 	hl                         map[int]highlight // the highlight table used by ext_hlstate
 }
 
-// Create a new NeoVim widget
-func New() *NeoVim {
+// Create a new NeoVim widget with the given path
+func New(pth string) *NeoVim {
 	neovim := &NeoVim{}
 	neovim.hl = make(map[int]highlight)
 
@@ -78,7 +78,7 @@ func New() *NeoVim {
 	neovim.content = tgrid
 
 	neovim.ExtendBaseWidget(neovim)
-	err := neovim.startNeovim()
+	err := neovim.startNeovim(pth)
 	if err != nil {
 		fmt.Println("Error starting neovim: ", err)
 	}
@@ -87,13 +87,18 @@ func New() *NeoVim {
 }
 
 // Helper to start neovim
-func (n *NeoVim) startNeovim() error {
+func (n *NeoVim) startNeovim(pth string) error {
 	// start neovim
 	// --embed to use stdin/stdout as a msgpack-RPC channel
 	opt := nvim.ChildProcessArgs("--embed")
 	nvimInstance, err := nvim.NewChildProcess(opt)
 	if err != nil {
 		return err
+	}
+
+	err = nvimInstance.SetCurrentDirectory(pth)
+	if err != nil {
+		fmt.Println("Error setting project: ", err)
 	}
 
 	// tell nvim we want to draw the screen (using the new line based API)
