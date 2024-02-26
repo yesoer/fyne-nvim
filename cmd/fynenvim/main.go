@@ -13,7 +13,7 @@ func main() {
 	w := a.NewWindow("Fyne NeoVim Example")
 	w.Resize(fyne.NewSize(900, 600))
 
-	nvim := nvim.New()
+	nvim := nvim.New("")
 	nvim.Resize(fyne.NewSize(900, 600))
 	w.SetContent(nvim)
 	w.Canvas().Focus(nvim)
