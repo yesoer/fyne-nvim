@@ -36,7 +36,7 @@ func (n *NeoVim) ScrollGrid(top, bot, left, right, rows int) {
 // cursor position
 func (n *NeoVim) MoveGridCursor(oldRow, oldCol, newRow, newCol int) {
 	// recover the previous locations colors on horizontal movement
-	if oldRow == int(newRow) {
+	if oldRow == newRow {
 		r := n.content.Rows[oldRow].Cells[oldCol].Rune
 		cellStyle := &widget.CustomTextGridStyle{
 			FGColor: n.cursorCellFg,
@@ -49,8 +49,8 @@ func (n *NeoVim) MoveGridCursor(oldRow, oldCol, newRow, newCol int) {
 	newCell := n.content.Rows[newRow].Cells[newCol]
 	n.cursorCellFg = newCell.Style.TextColor()
 	n.cursorCellBg = newCell.Style.BackgroundColor()
-	n.cursorRow = int(newRow)
-	n.cursorCol = int(newCol)
+	n.cursorRow = newRow
+	n.cursorCol = newCol
 }
 
 // Writes a line of text (as defined by neovims ui events) to the textgrid

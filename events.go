@@ -18,7 +18,7 @@ import (
 // have to worry about preserving order
 func (n *NeoVim) HandleNvimEvent(event []interface{}) {
 	// fmt.Println("Handling event: ", event)
-	fmt.Println("Handling event: ", event[0])
+	// fmt.Println("Handling event: ", event[0])
 
 	for _, e := range event[1:] {
 		entries, ok := e.([]interface{})
@@ -190,8 +190,8 @@ func (n *NeoVim) HandleNvimEvent(event []interface{}) {
 			// Additional entries: grid, row, column
 
 			oldRow, oldCol := n.cursorRow, n.cursorCol
-			newRow, _ := entries[1].(int)
-			newCol, _ := entries[2].(int)
+			newRow, _ := entries[1].(int64)
+			newCol, _ := entries[2].(int64)
 
 			n.MoveGridCursor(oldRow, oldCol, int(newRow), int(newCol))
 
