@@ -5,9 +5,19 @@ import (
 	"fyne.io/fyne/v2/driver/desktop"
 )
 
+// Declare conformity with the tappable interface
+// So that we can focus when tapped
+var _ fyne.Tappable = (*NeoVim)(nil)
+
 // Declare conformity with the focusable interface
 // So that we can receive and handle text input events
 var _ fyne.Focusable = (*NeoVim)(nil)
+
+// Tapped implements fyne.Tappable
+// Tapped makes sure we ask for focus if user taps us.
+func (n *NeoVim) Tapped(ev *fyne.PointEvent) {
+	fyne.CurrentApp().Driver().CanvasForObject(n).Focus(n)
+}
 
 // FocusGained implements fyne.Focusable
 // FocusGained is a hook called by the focus handling logic after this object
