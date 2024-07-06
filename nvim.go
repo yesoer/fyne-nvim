@@ -62,10 +62,10 @@ type NeoVim struct {
 	// Additional fields
 	// It is standard in a Fyne widget to export the fields which define
 	// behaviour (just like the primitives defined in the canvas package).
+	Engine                     *nvim.Nvim
 	content                    *widget.TextGrid
 	cursorRow, cursorCol       int
-	cursorCellFg, cursorCellBg color.Color // store color of the underlying cell
-	engine                     *nvim.Nvim
+	cursorCellFg, cursorCellBg color.Color       // store color of the underlying cell
 	hl                         map[int]highlight // the highlight table used by ext_hlstate
 }
 
@@ -118,7 +118,7 @@ func (n *NeoVim) startNeovim(pth string) error {
 		}
 	})
 
-	n.engine = nvimInstance
+	n.Engine = nvimInstance
 
 	return nil
 }
@@ -135,7 +135,7 @@ func (n *NeoVim) resizeGrid(s fyne.Size) {
 	colsCnt := int(s.Width / cellSize.Width)
 
 	// Triggers the resize event
-	err := n.engine.TryResizeUIGrid(GLOBAL_GRID, colsCnt, rowsCnt)
+	err := n.Engine.TryResizeUIGrid(GLOBAL_GRID, colsCnt, rowsCnt)
 	if err != nil {
 		fmt.Println("Error resizing grid: ", err)
 	}

@@ -16,6 +16,7 @@ var _ fyne.Focusable = (*NeoVim)(nil)
 // Tapped implements fyne.Tappable
 // Tapped makes sure we ask for focus if user taps us.
 func (n *NeoVim) Tapped(ev *fyne.PointEvent) {
+	// TODO : throws error when tapped in p2psim but not as standalone
 	fyne.CurrentApp().Driver().CanvasForObject(n).Focus(n)
 }
 
@@ -37,14 +38,14 @@ func (n *NeoVim) FocusLost() {
 // TypedRune is a hook called by the input handling logic on text input events
 // if this object is focused.
 func (n *NeoVim) TypedRune(r rune) {
-	n.engine.Input(string(r))
+	n.Engine.Input(string(r))
 }
 
 // FocusGained implements fyne.Focusable
 // TypedKey is a hook called by the input handling logic on key events if this
 // object is focused.
 func (n *NeoVim) TypedKey(e *fyne.KeyEvent) {
-	n.engine.Input(neovimKeyMap[e.Name])
+	n.Engine.Input(neovimKeyMap[e.Name])
 }
 
 // Declare conformity with the shortcut interface
@@ -66,6 +67,6 @@ func (n *NeoVim) TypedShortcut(s fyne.Shortcut) {
 		}
 
 		modifiers := neovimModifierMap[ds.Modifier]
-		n.engine.Input("<" + modifiers + string(char) + ">")
+		n.Engine.Input("<" + modifiers + string(char) + ">")
 	}
 }
