@@ -17,8 +17,6 @@ import (
 // The go client calls this function sequentially for each event, so we don't
 // have to worry about preserving order
 func (n *NeoVim) HandleNvimEvent(event []interface{}) {
-	// fmt.Println("Handling event: ", event)
-	// fmt.Println("Handling event: ", event[0])
 
 	for _, e := range event[1:] {
 		entries, ok := e.([]interface{})
