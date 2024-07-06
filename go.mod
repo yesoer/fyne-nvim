@@ -4,7 +4,7 @@ go 1.20
 
 require (
 	fyne.io/fyne/v2 v2.4.2
-	github.com/neovim/go-client v1.2.1
+	github.com/neovim/go-client v1.2.2-0.20230716041012-dd77a916541b
 	github.com/stretchr/testify v1.8.4
 )
 
